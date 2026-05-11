@@ -36,3 +36,56 @@ Download the pretrained models:
 
 and place them into the `weights/` directory before training or inference.
 
+#### Step 1 (Alignment): Unsupervised pre-training on Stitched MS-COCO
+
+```bash
+
+python3 train.py --data data/warpedcoco.yaml --hyp data/hyp.align.scratch.yaml --cfg models/align_dino.yaml --weights weights/DINO_test.pth --batch-size 16 --img-size 128 --epochs 150 --adam --device 0 --mode align
+
+mv runs/train/exp weights/align/warpedcoco
+```
+
+#### Step 2 (Alignment): Unsupervised finetuning on UDIS-D
+
+```bash
+
+python3 train.py --data data/udis.yaml --hyp data/hyp.align.finetune.udis.yaml --cfg models/align_dino.yaml --weights weights/align/warpedcoco/weights/best.pt --batch-size 16 --img-size 128 --epochs 50 --adam --device 3 --mode align
+ 
+mv runs/train/exp weights/align/udis
+```
+
+#### Step 3 (Alignment): Evaluating and visualizing the alignment results
+
+```bash
+(RMSE) python3 inference_align.py --source data/warpedcoco.yaml --weights weights/align/warpedcoco/weights/best.pt --task val --rmse
+(PSNR) python3 test.py --data data/warpedcoco.yaml --weights weights/align/warpedcoco/weights/best.pt --batch-size 64 --img-size 128 --task val --device 0 --mode align
+(PSNR) python3 test.py --data data/udis.yaml --weights weights/align/udis/weights/best.pt --batch-size 64 --img-size 128 --task val --device 0 --mode align
+(PLOT) python3 inference_align.py --source data/udis.yaml --weights weights/align/udis/weights/best.pt --task val --visualize
+rm -r runs/infer/ runs/test/
+```
+
+#### Step 4 (Alignment): Generating the coarsely aligned image pairs
+
+```bash
+python3 inference_align.py --source data/udis.yaml --weights weights/align/udis/weights/best.pt --task train
+python3 inference_align.py --source data/udis.yaml --weights weights/align/udis/weights/best.pt --task test
+mkdir UDIS-D/warp
+mv runs/infer/exp UDIS-D/warp/train
+mv runs/infer/exp2 UDIS-D/warp/test
+```
+
+#### Step 5 (Reconstruction): Training the reconstrction model on UDIS-D
+
+```bash
+
+python3 train.py --data data/udis.yaml --hyp data/hyp.fuse.scratch.yaml --cfg models/fuse_yolo.yaml --weights weights/levit_test.pth --batch-size 4 --img-size 640 --epochs 30 --adam --device 0 --mode fuse --reg-mode crop
+
+mv runs/train/exp weights/fuse/udis
+```
+
+#### Step 6 (Reconstruction): Generating the finally stitched results
+
+```bash
+python3 inference_fuse.py --weights weights/fuse/udis/weights/best.pt --source data/udis.yaml --task test --half --img-size 640 --reg-mode crop
+```
+
