@@ -24,3 +24,10 @@ Make sure the images are organized as follows:
 UDIS-D/train/input1/000001.jpg  UDIS-D/train/input2/000001.jpg  UDIS-D/test/input1/000001.jpg  UDIS-D/test/input2/000001.jpg
 WarpedCOCO/training/input1/000001.jpg  WarpedCOCO/training/input2/000001.jpg  WarpedCOCO/testing/input1/000001.jpg  WarpedCOCO/testing/input2/000001.jpg
 ```
+
+## Training, Testing, and Inference
+Run the commands below to go through the whole process of unsupervised deep image stitching. Some alternative commands are displayed in [main.sh](main.sh).
+
+Download the pretrained backbones ([DINO](https://github.com/chenmansheng0601-max/Image-Stitching/releases/tag/v1.0), [YOLOv5x](https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5x.pt)) and put them to the `weights/` directory first. You can modify the `depth_multiple` and `width_multiple` in `models/*.yaml` to choose which backbone to use. 
+
+
